@@ -28,6 +28,10 @@ namespace ChuyenAmLich
         private void btnchuyen_Click(object sender, EventArgs e)
         {
             NgayAmLich kq = Soc.TimNgayAm(dpk_ngayduong.Value); ;
+
+            lb_ketqua.Text = kq.ToString(FORMAT.DAI);
+            lb_ngaybt.Text = kq.ToString();
+
         }
     }
 }

@@ -110,7 +110,8 @@ namespace ChuyenAmLich
                         }
                         else// là năm nhuận, phải tìm tháng nhuận
                         {
-                            for (Soc t = thang11truoc.SocSau; t != thang11sau; t = t.SocSau)
+                            bool bietthangnhuan = false;
+                            for (Soc t = thang11sau.SocTruoc; t != thang11truoc; t = t.SocTruoc)
                             {
                                 bool chuatietkhi = false;
                                 foreach(TietKhi tk in TietKhi.TietKhiTrongNam )  // kiểm tra tháng có chứa bất kì tiết khí nào trong năm không
@@ -121,12 +122,16 @@ namespace ChuyenAmLich
                                         break;
                                     }
                                 }
-                                if (chuatietkhi)
-                                    t.thangam = (t.SocTruoc.Thang % 12) + 1;
+                                if (chuatietkhi || bietthangnhuan)
+                                    if (!t.SocSau.ThangNhuan)
+                                        t.thangam = ((t.SocSau.Thang+10) % 12)+1 ;
+                                    else
+                                        t.thangam = t.SocSau.Thang;
                                 else
                                 {
-                                    t.thangam = t.SocTruoc.Thang;
+                                    t.thangam = ((t.SocSau.Thang+10) % 12) +1;
                                     t.nhuan = true;
+                                    bietthangnhuan = true;
                                 }
                             }
                         }
@@ -144,11 +149,14 @@ namespace ChuyenAmLich
             get {
                 if(namam == -1)
                 {
-                    if (Thang ==1)
+                    if (Thang >= 1 && Thang <= 11)
                         namam = NgayDuongLich.Year;
                     else
                     {
-                        namam = socTruoc.Nam;
+                       if(NgayDuongLich.Month==Thang)
+                           namam = NgayDuongLich.Year;
+                        else
+                           namam = NgayDuongLich.Year-1;
                     }
                 }
                 return namam;
@@ -159,37 +167,36 @@ namespace ChuyenAmLich
         private Soc()
         {
             kieuSoc = KIEUTHANG.THIEU;
-            vectorNgay = 0.00058868;  
+            vectorNgay = 0.183532070;  
+            //vectorNgay = 0.32;  
             duonglich = new DateTime(2015, 2, 19);
         }
 
         private Soc(Soc psoctruoc, double songay)
         {
-
-            double Songay = songay - (long)psoctruoc.vectorNgay ;
-            long lsongay = (long)Songay;
-         //   phanduNgay = Math.Abs(Songay - lsongay);
-            if (lsongay >= 30)
+            vectorNgay = songay;
+            double Songay = songay - (long)psoctruoc.vectorNgay ;       
+            if (SONGAYTRONGTHANG+(Songay-(long)Songay) >= 30)
                 kieuSoc = KIEUTHANG.DU;
             else
                 kieuSoc = KIEUTHANG.THIEU;
-            duonglich = SOCGOC.NgayDuongLich.AddDays(lsongay);
-            socTruoc = psoctruoc;
-            vectorNgay = songay;
+            duonglich = psoctruoc.NgayDuongLich.AddDays((long)Songay);
+            socTruoc = psoctruoc;            
+            socSau = null;
         }
 
         private Soc(double songay,Soc psocsau)
         {
-            
-            double Songay = songay - (long)psocsau.vectorNgay;
-            long lsongay = (long)Songay;            
-            if (Math.Abs(Songay) >= 30)
+            vectorNgay = songay;
+            double Songay = (psocsau.vectorNgay + ((long)Math.Abs(vectorNgay) + 1)) - (long)(vectorNgay + ((long)Math.Abs(vectorNgay) + 1));                 
+            if (Songay >= 30)
                 kieuSoc = KIEUTHANG.DU;
             else
                 kieuSoc = KIEUTHANG.THIEU;
-            duonglich = SOCGOC.NgayDuongLich.AddDays(lsongay);
+            duonglich = psocsau.NgayDuongLich.AddDays(-(long)Songay);
             socSau = psocsau;
-            vectorNgay = songay;
+            
+            socTruoc = null;
         }
 
 
@@ -257,7 +264,7 @@ namespace ChuyenAmLich
         /// <returns></returns>
         public bool ChuaNgayDuongLich(DateTime ngayduong)
         {
-            return ngayduong >= NgayDuongLich && ngayduong <= NgayCuoiSoc;
+            return ngayduong >= NgayDuongLich && ngayduong < SocSau.NgayDuongLich;
         }
         
         /// <summary>
