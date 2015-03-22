@@ -13,7 +13,6 @@ namespace ChuyenAmLich
     
     public partial class ChuongTrinhChuyenNgay : Form
     {
-        public static readonly DateTime ngaygoc = new DateTime(2015, 2, 19);// ngay 1/1/2015 am lich
         public ChuongTrinhChuyenNgay()
         {
             InitializeComponent();
